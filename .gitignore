@@ -16,10 +16,11 @@ Thumbs.db
 
 # Debian build artifacts
 debian/.debhelper/
-debian/robotops-msgs/
+debian/ros-jazzy-robotops-msgs/
 debian/files
 debian/*.log
 debian/*.substvars
+.obj-*/
 obj-*/
 *.deb
 *.ddeb
