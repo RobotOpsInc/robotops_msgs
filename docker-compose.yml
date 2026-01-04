@@ -1,0 +1,19 @@
+services:
+  dev:
+    image: ros:jazzy
+    volumes:
+      - .:/ws/src/robotops_msgs
+      - build-cache:/ws/build
+      - install-cache:/ws/install
+      - log-cache:/ws/log
+    working_dir: /ws
+    command: bash -c "source /opt/ros/jazzy/setup.bash && exec bash"
+    stdin_open: true
+    tty: true
+    environment:
+      - TERM=xterm-256color
+
+volumes:
+  build-cache:
+  install-cache:
+  log-cache:

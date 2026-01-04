@@ -1,0 +1,27 @@
+# ROS2 build artifacts
+build/
+install/
+log/
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Debian build artifacts
+debian/.debhelper/
+debian/robotops-msgs/
+debian/files
+debian/*.log
+debian/*.substvars
+obj-*/
+*.deb
+*.ddeb
+*.changes
+*.buildinfo

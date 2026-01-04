@@ -1,0 +1,12 @@
+Source: ros-jazzy-robotops-msgs
+Section: misc
+Priority: optional
+Maintainer: RobotOps Team <support@robotops.dev>
+Build-Depends: debhelper (>= 9.0.0), ros-jazzy-ament-cmake, ros-jazzy-builtin-interfaces, ros-jazzy-rosidl-default-generators
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-robotops-msgs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-jazzy-builtin-interfaces, ros-jazzy-rosidl-default-runtime
+Description: ROS2 message definitions for RobotOps distributed tracing
