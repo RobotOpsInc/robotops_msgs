@@ -56,25 +56,25 @@ jobs:
               cp /ws/src/*.deb /output/
             "
 
-      - name: List built packages
-        run: ls -la *.deb
-
-      - name: Install Cloudsmith CLI
-        run: pip install cloudsmith-cli
+      - name: Find built package
+        id: deb
+        run: |
+          DEB_FILE=$(ls *.deb | head -n1)
+          echo "file=$DEB_FILE" >> $GITHUB_OUTPUT
+          echo "Built package: $DEB_FILE"
 
       - name: Upload to Cloudsmith
-        env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: |
-          REPO="${{ steps.repo.outputs.repo }}"
-          DEB_FILE=$(ls *.deb | head -n1)
-
-          echo "Uploading $DEB_FILE to robotops/$REPO"
-
-          cloudsmith push deb \
-            --republish \
-            robotops/$REPO/ubuntu/noble \
-            "$DEB_FILE"
+        uses: cloudsmith-io/action@v0.6.10
+        with:
+          api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
+          command: "push"
+          format: "deb"
+          owner: "robotops"
+          repo: ${{ steps.repo.outputs.repo }}
+          distro: "ubuntu"
+          release: "noble"
+          republish: "true"
+          file: ${{ steps.deb.outputs.file }}
 
       - name: Summary
         run: |
