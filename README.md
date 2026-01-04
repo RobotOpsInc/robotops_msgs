@@ -65,6 +65,28 @@ Emitted when trace context changes for log correlation. Published on `/robotops/
 | `/robotops/trace_events` | `TraceEvent` | Reliable, depth=1000 |
 | `/robotops/trace_context` | `TraceContextChange` | Reliable, depth=100 |
 
+## Installation
+
+### Production
+
+```bash
+# Add RobotOps apt repository
+curl -1sLf 'https://dl.cloudsmith.io/public/robotops/robotops/setup.deb.sh' | sudo bash
+
+# Install the package
+sudo apt install ros-jazzy-robotops-msgs
+```
+
+### Development
+
+```bash
+# Add RobotOps development apt repository
+curl -1sLf 'https://dl.cloudsmith.io/public/robotops/robotops-development/setup.deb.sh' | sudo bash
+
+# Install the package
+sudo apt install ros-jazzy-robotops-msgs
+```
+
 ## Development (Container-based)
 
 ROS2 Jazzy doesn't have native macOS support. Use Docker for local development:
