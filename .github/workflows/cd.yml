@@ -12,7 +12,7 @@ jobs:
           - arch: amd64
             runner: ubuntu-24.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: custom-ubuntu-server-24.04-arm-4-core
     runs-on: ${{ matrix.runner }}
 
     steps:
