@@ -46,7 +46,7 @@ bloom-generate rosdebian --os-name ubuntu --os-version noble --ros-distro jazzy
 - `robotops` - production (from `main`)
 - `robotops-development` - development (from `development`)
 
-**Versioning:** Update `<version>` in `package.xml` before merging. Must be > current published version.
+**Versioning:** Update `<version>` in `package.xml` **before committing changes**. Each commit that will be merged must increment the version and it must be > current published version. The `cd.yml` workflow automatically regenerates `debian/` files with the new version during package build.
 
 ## Documentation
 

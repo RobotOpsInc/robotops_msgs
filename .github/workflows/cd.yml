@@ -52,6 +52,7 @@ jobs:
               cd /ws/src/robotops_msgs && \
               apt-get update && \
               apt-get install -y dpkg-dev fakeroot debhelper && \
+              bloom-generate rosdebian --os-name ubuntu --os-version noble --ros-distro jazzy && \
               dpkg-buildpackage -us -uc -b && \
               cp /ws/src/*.deb /output/
             "
