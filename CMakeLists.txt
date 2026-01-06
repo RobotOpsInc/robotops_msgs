@@ -12,6 +12,8 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TraceEvent.msg"
   "msg/TraceContextChange.msg"
+  "msg/DiagnosticsReport.msg"
+  "msg/StartupDiagnostics.msg"
   DEPENDENCIES builtin_interfaces
 )
 
