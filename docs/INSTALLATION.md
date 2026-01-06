@@ -2,6 +2,10 @@
 
 This guide explains how to install `robotops_msgs` on a ROS2 Jazzy system.
 
+## Version Notice
+
+**Current version: 0.2.0** - This is a breaking change from 0.1.x. See [CHANGELOG.md](../CHANGELOG.md) for migration guide.
+
 ## Prerequisites
 
 - Ubuntu 24.04 (Noble)
@@ -34,6 +38,8 @@ If you have ROS2 Jazzy sourced (e.g., `source /opt/ros/jazzy/setup.bash` in your
 # Verify the messages are available
 ros2 interface show robotops_msgs/msg/TraceEvent
 ros2 interface show robotops_msgs/msg/TraceContextChange
+ros2 interface show robotops_msgs/msg/DiagnosticsReport
+ros2 interface show robotops_msgs/msg/StartupDiagnostics
 ```
 
 ## Do I need to modify my bashrc?
@@ -47,6 +53,19 @@ source /opt/ros/jazzy/setup.bash
 ```
 
 Then `robotops_msgs` will be available in any new terminal after installation.
+
+## Upgrading from 0.1.x
+
+Version 0.2.0 introduces **breaking changes**. Before upgrading:
+
+1. Review the [CHANGELOG.md](../CHANGELOG.md) migration guide
+2. Update code that uses `TraceEvent.operation` to use `TraceEvent.event_type`
+3. Rebuild dependent packages after upgrading
+
+```bash
+sudo apt update
+sudo apt install --only-upgrade ros-jazzy-robotops-msgs
+```
 
 ## Development Builds
 
