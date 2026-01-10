@@ -25,6 +25,8 @@ Build artifacts are cached in Docker volumes (`build-cache`, `install-cache`) fo
 
 ## Debian Packaging
 
+This package is distributed as a **source package** (`Architecture: all`). The .deb installs message definition sources to `/opt/ros/jazzy/share/robotops_msgs/`. End users compile the messages when building their ROS2 workspace with `colcon build`.
+
 ```bash
 # Inside container - build .deb package
 cd /ws/src/robotops_msgs
@@ -40,7 +42,7 @@ bloom-generate rosdebian --os-name ubuntu --os-version noble --ros-distro jazzy
 |----------|---------|---------|
 | `ci.yml` | Push to `feature/**` | Build verification |
 | `version-check.yml` | PR to `development`/`main` | Ensure version incremented |
-| `cd.yml` | Push to `development`/`main` | Build .deb, publish to Cloudsmith |
+| `cd.yml` | Push to `development`/`main` | Build source .deb, publish to Cloudsmith |
 
 **Cloudsmith repos:**
 - `robotops` - production (from `main`)
