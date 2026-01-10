@@ -4,7 +4,7 @@ This guide explains how to install `robotops_msgs` on a ROS2 Jazzy system.
 
 ## Version Notice
 
-**Current version: 0.2.0** - This is a breaking change from 0.1.x. See [CHANGELOG.md](../CHANGELOG.md) for migration guide.
+**Current version: 0.3.0** - See [CHANGELOG.md](../CHANGELOG.md) for details.
 
 ## Prerequisites
 
@@ -30,9 +30,17 @@ sudo apt update
 sudo apt install ros-jazzy-robotops-msgs
 ```
 
-### 3. Verify installation
+### 3. Build in your workspace
 
-If you have ROS2 Jazzy sourced (e.g., `source /opt/ros/jazzy/setup.bash` in your `~/.bashrc`), the package is immediately available:
+This package is distributed as source. After installing, build it in your ROS2 workspace:
+
+```bash
+cd ~/your_ros2_ws
+colcon build --packages-select robotops_msgs
+source install/setup.bash
+```
+
+### 4. Verify installation
 
 ```bash
 # Verify the messages are available
@@ -42,17 +50,11 @@ ros2 interface show robotops_msgs/msg/DiagnosticsReport
 ros2 interface show robotops_msgs/msg/StartupDiagnostics
 ```
 
-## Do I need to modify my bashrc?
+## Workspace setup
 
-**No additional bashrc changes are needed** if you already have ROS2 Jazzy set up.
+The apt package installs message sources to `/opt/ros/jazzy/share/robotops_msgs/`. You must build these in a colcon workspace before use.
 
-The package installs to `/opt/ros/jazzy/`, which is included when you source the ROS2 setup file. If you already have this in your `~/.bashrc`:
-
-```bash
-source /opt/ros/jazzy/setup.bash
-```
-
-Then `robotops_msgs` will be available in any new terminal after installation.
+If you already have a workspace with `source ~/your_ros2_ws/install/setup.bash` in your `~/.bashrc`, the messages will be available after building.
 
 ## Upgrading from 0.1.x
 
@@ -60,11 +62,15 @@ Version 0.2.0 introduces **breaking changes**. Before upgrading:
 
 1. Review the [CHANGELOG.md](../CHANGELOG.md) migration guide
 2. Update code that uses `TraceEvent.operation` to use `TraceEvent.event_type`
-3. Rebuild dependent packages after upgrading
 
 ```bash
 sudo apt update
 sudo apt install --only-upgrade ros-jazzy-robotops-msgs
+
+# Rebuild in your workspace
+cd ~/your_ros2_ws
+colcon build --packages-select robotops_msgs
+source install/setup.bash
 ```
 
 ## Development Builds
