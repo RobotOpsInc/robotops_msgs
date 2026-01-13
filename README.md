@@ -126,6 +126,34 @@ cd /ws/src/robotops_msgs
 bloom-generate rosdebian --os-name ubuntu --os-version noble --ros-distro jazzy
 ```
 
+## Versioning
+
+### Version Policy
+
+**Major versions** move in lockstep across the RobotOps ecosystem (`robotops_config`, `robotops_msgs`, `rmw_robotops`, `robot_agent`). When any component introduces a breaking change, all components bump to the next major version together.
+
+**Minor and patch versions** evolve independently between major version boundaries. Backward compatibility is maintained for all minor and patch releases within the same major version.
+
+### Development Workflow
+
+```bash
+# Bump version (patch, minor, or major)
+just bump-version patch
+
+# Edit CHANGELOG.rst with your changes
+vim CHANGELOG.rst
+
+# Create PR to development branch
+# After merge, maintainer triggers release workflow from GitHub Actions UI
+```
+
+### Releasing
+
+Releases are triggered manually via GitHub Actions:
+
+- **Production**: Run "Release" workflow from `main` branch
+- **Development**: Run "Release Development" workflow from `development` branch
+
 ## License
 
 Apache-2.0
