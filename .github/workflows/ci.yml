@@ -5,15 +5,12 @@ on:
     branches: ['feature/**', '[0-9]*']
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Install just
-        uses: extractions/setup-just@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -29,5 +26,29 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Run CI tests
-        run: just ci-test
+      - name: Verify C++ bindings
+        run: |
+          docker run --rm robotops_msgs:ci bash -c \
+            "source /ws/install/setup.bash && ros2 interface show robotops_msgs/msg/TraceEvent"
+
+      - name: Verify Python bindings
+        run: |
+          docker run --rm robotops_msgs:ci bash -c \
+            "source /ws/install/setup.bash && python3 -c 'from robotops_msgs.msg import TraceEvent, TraceContextChange, DiagnosticsReport, StartupDiagnostics; print(\"OK\")'"
+
+      - name: Run colcon tests
+        run: |
+          docker run --rm robotops_msgs:ci bash -c \
+            "source /opt/ros/jazzy/setup.sh && cd /ws && colcon test --packages-select robotops_msgs && colcon test-result --verbose"
+
+      - name: Generate and validate Rust SDK
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/generated:/ws/src/robotops_msgs/generated" \
+            robotops_msgs:ci bash -c \
+            "source /ws/install/setup.bash && \
+             /ws/src/robotops_msgs/tools/generate-sdk.sh && \
+             cd /ws/src/robotops_msgs/generated/sdks/rust && \
+             cargo check && \
+             cargo clippy -- -D warnings && \
+             cargo test"

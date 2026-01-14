@@ -59,6 +59,17 @@ jobs:
 
           echo "CHANGELOG.rst has entry for version ${VERSION}"
 
+      - name: Verify Rust SDK generation script exists
+        run: |
+          # Rust SDK is generated at release time from package.xml version
+          # Just verify the generation script exists
+          if [ -f "tools/generate-sdk.sh" ]; then
+            echo "Rust SDK generation script found"
+          else
+            echo "::error::tools/generate-sdk.sh not found"
+            exit 1
+          fi
+
       - name: Determine Cloudsmith repository
         id: repo
         run: |
