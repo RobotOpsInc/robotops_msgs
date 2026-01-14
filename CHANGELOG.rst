@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.4.2 (2026-01-14)
+-------------------
+
+* Fixed Cloudsmith api auth in release workflows
+
 0.4.1 (2026-01-14)
 -------------------
 
