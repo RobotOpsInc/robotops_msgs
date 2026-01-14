@@ -209,7 +209,7 @@ jobs:
               # Configure Cloudsmith registry
               cat >> ~/.cargo/config.toml <<EOF
           [registries.cloudsmith]
-          index = \"sparse+https://cargo.cloudsmith.io/robotops/robotops/\"
+          index = \"sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust/\"
           EOF
               echo \"[registries.cloudsmith]\" > ~/.cargo/credentials.toml
               echo \"token = \\\"Token \${CLOUDSMITH_API_KEY}\\\"\" >> ~/.cargo/credentials.toml

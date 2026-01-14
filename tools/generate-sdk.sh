@@ -140,11 +140,18 @@ Auto-generated from ROS2 .msg definitions using ros2_rust.
 
 ## Installation
 
-Add to \`Cargo.toml\`:
+1. Configure the Cloudsmith Cargo registry in \`.cargo/config.toml\`:
+
+\`\`\`toml
+[registries.robotops]
+index = "sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust/"
+\`\`\`
+
+2. Add to \`Cargo.toml\`:
 
 \`\`\`toml
 [dependencies]
-robotops-msgs = { registry = "cloudsmith" }
+robotops-msgs = { version = "$VERSION", registry = "robotops" }
 \`\`\`
 
 ## Message Types

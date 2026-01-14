@@ -4,7 +4,7 @@ This guide explains how to install `robotops_msgs` on a ROS2 Jazzy system.
 
 ## Version Notice
 
-**Current version: 0.3.0** - See [CHANGELOG.md](../CHANGELOG.md) for details.
+**Current version: 0.4.0** - See [CHANGELOG.md](../CHANGELOG.md) for details.
 
 ## Prerequisites
 
@@ -83,6 +83,52 @@ curl -1sLf 'https://dl.cloudsmith.io/public/robotops/robotops-development/setup.
 
 sudo apt update
 sudo apt install ros-jazzy-robotops-msgs
+```
+
+## Rust SDK (for robot_agent and other Rust consumers)
+
+The `robotops-msgs` Rust crate provides native Rust bindings for all message types.
+
+### 1. Configure the Cloudsmith Cargo registry
+
+Add to `.cargo/config.toml` in your project or `~/.cargo/config.toml` globally:
+
+```toml
+[registries.robotops]
+index = "sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust/"
+```
+
+### 2. Add the dependency
+
+Add to your `Cargo.toml`:
+
+```toml
+[dependencies]
+robotops-msgs = { version = "0.4", registry = "robotops" }
+```
+
+### 3. Use in your code
+
+```rust
+use robotops_msgs::msg::{TraceEvent, TraceContextChange, DiagnosticsReport, StartupDiagnostics};
+
+let event = TraceEvent::default();
+```
+
+### Development Builds (Rust)
+
+For development/testing builds:
+
+```toml
+# .cargo/config.toml
+[registries.robotops-dev]
+index = "sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust-dev/"
+```
+
+```toml
+# Cargo.toml
+[dependencies]
+robotops-msgs = { version = "0.4", registry = "robotops-dev" }
 ```
 
 ## Uninstallation

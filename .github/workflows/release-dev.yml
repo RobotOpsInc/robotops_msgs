@@ -211,7 +211,7 @@ jobs:
               # Configure Cloudsmith development registry
               cat >> ~/.cargo/config.toml <<EOF
           [registries.cloudsmith-dev]
-          index = \"sparse+https://cargo.cloudsmith.io/robotops/robotops-development/\"
+          index = \"sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust-dev/\"
           EOF
               echo \"[registries.cloudsmith-dev]\" > ~/.cargo/credentials.toml
               echo \"token = \\\"Token \${CLOUDSMITH_API_KEY}\\\"\" >> ~/.cargo/credentials.toml
