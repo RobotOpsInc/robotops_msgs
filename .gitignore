@@ -3,6 +3,10 @@ build/
 install/
 log/
 
+# Generated SDK code (regenerate with: just generate)
+generated/*
+!generated/.gitkeep
+
 # IDE / Editor files
 .vscode/
 .idea/

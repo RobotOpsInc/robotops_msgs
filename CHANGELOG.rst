@@ -1,6 +1,22 @@
 Changelog
 =========
 
+0.4.0 (2026-01-14)
+-------------------
+
+**Added**
+
+* **Rust SDK**: Auto-generated Rust bindings for all message types using ros2_rust
+* ``robotops-msgs`` crate with TraceEvent, TraceContextChange, DiagnosticsReport, StartupDiagnostics
+* ``builtin-interfaces`` bundled dependency for ROS2 Time types
+* SDK published to Cloudsmith Cargo registry on release
+* ``just generate`` command to regenerate Rust SDK from .msg files
+
+**Changed**
+
+* Dockerfile now includes ros2_rust built from source for Rust code generation
+* CI validates generated Rust SDK (cargo check, clippy, test)
+
 0.3.2 (2026-01-12)
 -------------------
 
