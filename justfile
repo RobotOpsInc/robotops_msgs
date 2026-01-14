@@ -69,39 +69,46 @@ bump-version type:
     fi
 
 # =============================================================================
-# Local Development
+# Development
 # =============================================================================
 
-# Enter development container (ROS2 Jazzy)
+# Enter development container
 dev:
     docker compose run --rm dev
 
-# Build the ROS2 package
+# Build ROS2 package
 build:
     docker compose run --rm dev bash -c "colcon build --packages-select robotops_msgs && source install/setup.bash && ros2 interface show robotops_msgs/msg/TraceEvent"
 
-# Verify Python bindings work
-verify:
-    docker compose run --rm dev bash -c "colcon build --packages-select robotops_msgs && source install/setup.bash && python3 -c 'from robotops_msgs.msg import TraceEvent, TraceContextChange; print(\"OK\")'"
+# Generate SDKs (Rust bindings from .msg files)
+generate:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Building Docker image (if needed)..."
+    docker build -t robotops_msgs:ci .
+    echo "Generating Rust SDK..."
+    mkdir -p generated/sdks/rust
+    docker run --rm \
+        -v "$(pwd)/generated:/ws/src/robotops_msgs/generated" \
+        robotops_msgs:ci bash -c \
+        "source /ws/install/setup.bash && /ws/src/robotops_msgs/tools/generate-sdk.sh"
+    echo "SDK generated in generated/sdks/rust/"
 
-# Clean build artifacts
+# Clean all build artifacts
 clean:
-    rm -rf build/ install/ log/
+    rm -rf build/ install/ log/ generated/sdks/
     docker compose down -v
 
 # =============================================================================
-# CI Commands (run locally or in GitHub Actions)
+# Testing & CI
 # =============================================================================
 
-# Build Docker image for CI
-ci-build-image:
-    docker build -t robotops_msgs:ci .
-
-# Run full CI suite (build image + tests)
-ci: ci-build-image
+# Run full CI suite (build + test + validate SDKs)
+ci:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Running CI suite..."
+    echo "Building Docker image..."
+    docker build -t robotops_msgs:ci .
 
     echo "Verifying C++ bindings..."
     docker run --rm robotops_msgs:ci bash -c \
@@ -115,30 +122,34 @@ ci: ci-build-image
     docker run --rm robotops_msgs:ci bash -c \
         "source /opt/ros/jazzy/setup.sh && cd /ws && colcon test --packages-select robotops_msgs && colcon test-result --verbose"
 
-    echo "CI suite passed!"
+    echo "Validating Rust SDK..."
+    docker run --rm -v "$(pwd)/generated:/ws/src/robotops_msgs/generated" robotops_msgs:ci bash -c \
+        "source /ws/install/setup.bash && \
+         /ws/src/robotops_msgs/tools/generate-sdk.sh && \
+         cd /ws/src/robotops_msgs/generated/sdks/rust && \
+         cargo check && \
+         cargo clippy -- -D warnings && \
+         cargo test"
 
-# Run CI tests only (assumes image already built)
-ci-test:
+    echo "CI passed!"
+
+# Run tests only (assumes image is built)
+test:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Running CI tests..."
-
     docker run --rm robotops_msgs:ci bash -c \
         "source /ws/install/setup.bash && ros2 interface show robotops_msgs/msg/TraceEvent"
-
     docker run --rm robotops_msgs:ci bash -c \
         "source /ws/install/setup.bash && python3 -c 'from robotops_msgs.msg import TraceEvent, TraceContextChange; print(\"OK\")'"
-
     docker run --rm robotops_msgs:ci bash -c \
         "source /opt/ros/jazzy/setup.sh && cd /ws && colcon test --packages-select robotops_msgs && colcon test-result --verbose"
-
-    echo "CI tests passed!"
+    echo "Tests passed!"
 
 # =============================================================================
-# Release Commands (build Debian packages)
+# Release (Debian packages)
 # =============================================================================
 
-# Build Debian package (outputs to current directory)
+# Build Debian package
 build-deb:
     #!/usr/bin/env bash
     set -euo pipefail
