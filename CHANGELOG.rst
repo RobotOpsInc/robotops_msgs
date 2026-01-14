@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.4.1 (2026-01-14)
+-------------------
+
+* Fixed Cargo registry authentication in release workflows
+* Fixed missing version in builtin_interfaces dependency during publish
+
 0.4.0 (2026-01-14)
 -------------------
 

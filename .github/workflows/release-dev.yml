@@ -202,27 +202,26 @@ jobs:
         run: |
           docker run --rm \
             -v "$(pwd)/generated:/ws/src/robotops_msgs/generated" \
-            -e CLOUDSMITH_API_KEY="${CLOUDSMITH_API_KEY}" \
-            robotops_msgs:ci bash -c "
+            -e CARGO_REGISTRIES_CLOUDSMITH_DEV_TOKEN="Token ${CLOUDSMITH_API_KEY}" \
+            -e VERSION="${{ steps.version.outputs.version }}" \
+            robotops_msgs:ci bash -c '
               source /ws/install/setup.bash
               cd /ws/src/robotops_msgs/generated/sdks/rust
               mkdir -p ~/.cargo
 
               # Configure Cloudsmith development registry
-              cat >> ~/.cargo/config.toml <<EOF
+              cat > ~/.cargo/config.toml <<EOF
           [registries.cloudsmith-dev]
-          index = \"sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust-dev/\"
+          index = "sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust-dev/"
           EOF
-              echo \"[registries.cloudsmith-dev]\" > ~/.cargo/credentials.toml
-              echo \"token = \\\"Token \${CLOUDSMITH_API_KEY}\\\"\" >> ~/.cargo/credentials.toml
 
               # Publish builtin-interfaces first (dependency)
               cd builtin-interfaces
-              cargo publish --registry cloudsmith-dev --allow-dirty || echo 'builtin-interfaces may already exist'
+              cargo publish --registry cloudsmith-dev --allow-dirty || echo "builtin-interfaces may already exist"
               cd ..
 
               # Update robotops-msgs to use registry dependency instead of path
-              sed -i 's|path = \"../builtin-interfaces\", package = \"builtin-interfaces\"|registry = \"cloudsmith-dev\", package = \"builtin-interfaces\"|' robotops-msgs/Cargo.toml
+              sed -i "s|builtin_interfaces = { path = \"../builtin-interfaces\", package = \"builtin-interfaces\" }|builtin_interfaces = { version = \"${VERSION}\", registry = \"cloudsmith-dev\", package = \"builtin-interfaces\" }|" robotops-msgs/Cargo.toml
 
               # Wait for index to update
               sleep 10
@@ -230,7 +229,7 @@ jobs:
               # Publish robotops-msgs
               cd robotops-msgs
               cargo publish --registry cloudsmith-dev --allow-dirty
-            "
+            '
 
       - name: Summary
         run: |
