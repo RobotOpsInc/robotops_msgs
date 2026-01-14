@@ -94,7 +94,7 @@ The `robotops-msgs` Rust crate provides native Rust bindings for all message typ
 Add to `.cargo/config.toml` in your project or `~/.cargo/config.toml` globally:
 
 ```toml
-[registries.robotops]
+[registries.robotops-robotops-msgs-rust]
 index = "sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust/"
 ```
 
@@ -104,7 +104,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-robotops-msgs = { version = "0.4", registry = "robotops" }
+robotops-msgs = { version = "0.4", registry = "robotops-robotops-msgs-rust" }
 ```
 
 ### 3. Use in your code
