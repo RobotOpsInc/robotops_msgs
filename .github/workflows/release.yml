@@ -200,17 +200,19 @@ jobs:
         run: |
           docker run --rm \
             -v "$(pwd)/generated:/ws/src/robotops_msgs/generated" \
-            -e CARGO_REGISTRIES_CLOUDSMITH_TOKEN="Token ${CLOUDSMITH_API_KEY}" \
+            -e CLOUDSMITH_API_KEY="${CLOUDSMITH_API_KEY}" \
             -e VERSION="${{ steps.version.outputs.version }}" \
             robotops_msgs:ci bash -c '
               source /ws/install/setup.bash
               cd /ws/src/robotops_msgs/generated/sdks/rust
               mkdir -p ~/.cargo
 
-              # Configure Cloudsmith registry
+              # Configure Cloudsmith registry (matching robotops_config approach)
               cat > ~/.cargo/config.toml <<EOF
           [registries.cloudsmith]
           index = "sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust/"
+          token = "Token ${CLOUDSMITH_API_KEY}"
+          credential-provider = "cargo:token"
           EOF
 
               # Publish builtin-interfaces first (dependency)
