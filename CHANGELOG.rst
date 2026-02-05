@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.5.1 (2026-02-05)
+-------------------
+
+* Fixed aptly repo detection in publish-debian-s3 action using ``-raw`` flag
+
 0.5.0 (2026-02-04)
 -------------------
 

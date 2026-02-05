@@ -4,7 +4,7 @@ This guide explains how to install `robotops_msgs` on a ROS2 Jazzy system.
 
 ## Version Notice
 
-**Current version: 0.5.0** - See [CHANGELOG.md](../CHANGELOG.md) for details.
+**Current version: 0.5.1** - See [CHANGELOG.md](../CHANGELOG.md) for details.
 
 ## Prerequisites
 
