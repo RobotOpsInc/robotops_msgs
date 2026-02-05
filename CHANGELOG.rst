@@ -1,6 +1,17 @@
 Changelog
 =========
 
+0.5.0 (2026-02-04)
+-------------------
+
+**Changed**
+
+* Migrated Debian package publishing from Cloudsmith to AWS S3/CloudFront
+* Migrated Rust SDK publishing from Cloudsmith to AWS CodeArtifact
+* APT repository now at ``https://apt.robotops.com`` (production) and ``https://apt.development.robotops.com`` (development)
+* Release workflows now use AWS OIDC authentication instead of API keys
+* Removed Cloudsmith version check from PR validation workflow
+
 0.4.2 (2026-01-14)
 -------------------
 
