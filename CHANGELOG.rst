@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.5.2 (2026-02-05)
+-------------------
+
+* Fixed aptly publish list pattern to match S3 endpoint format (includes dot prefix)
+
 0.5.1 (2026-02-05)
 -------------------
 
