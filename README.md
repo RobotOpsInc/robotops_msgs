@@ -70,20 +70,28 @@ Emitted when trace context changes for log correlation. Published on `/robotops/
 ### Production
 
 ```bash
-# Add RobotOps apt repository
-curl -1sLf 'https://dl.cloudsmith.io/public/robotops/robotops/setup.deb.sh' | sudo bash
+# Add the GPG key
+curl -fsSL https://apt.robotops.com/robotops-public-key.asc | sudo gpg --dearmor -o /etc/apt/keyrings/robotops.gpg
+
+# Add the repository
+echo "deb [signed-by=/etc/apt/keyrings/robotops.gpg] https://apt.robotops.com noble main" | sudo tee /etc/apt/sources.list.d/robotops.list
 
 # Install the package
+sudo apt update
 sudo apt install ros-jazzy-robotops-msgs
 ```
 
 ### Development
 
 ```bash
-# Add RobotOps development apt repository
-curl -1sLf 'https://dl.cloudsmith.io/public/robotops/robotops-development/setup.deb.sh' | sudo bash
+# Add the GPG key
+curl -fsSL https://apt.development.robotops.com/robotops-public-key.asc | sudo gpg --dearmor -o /etc/apt/keyrings/robotops-dev.gpg
+
+# Add the development repository
+echo "deb [signed-by=/etc/apt/keyrings/robotops-dev.gpg] https://apt.development.robotops.com noble main" | sudo tee /etc/apt/sources.list.d/robotops-dev.list
 
 # Install the package
+sudo apt update
 sudo apt install ros-jazzy-robotops-msgs
 ```
 
