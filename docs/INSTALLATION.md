@@ -4,7 +4,7 @@ This guide explains how to install `robotops_msgs` on a ROS2 Jazzy system.
 
 ## Version Notice
 
-**Current version: 0.4.0** - See [CHANGELOG.md](../CHANGELOG.md) for details.
+**Current version: 0.5.2** - See [CHANGELOG.md](../CHANGELOG.md) for details.
 
 ## Prerequisites
 
@@ -15,13 +15,15 @@ This guide explains how to install `robotops_msgs` on a ROS2 Jazzy system.
 
 ### 1. Add the RobotOps apt repository
 
-Run the Cloudsmith setup script to add the repository to your system:
+Add the GPG key and repository to your system:
 
 ```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/robotops/robotops/setup.deb.sh' | sudo bash
-```
+# Add the GPG key
+curl -fsSL https://apt.robotops.com/robotops-public-key.asc | sudo gpg --dearmor -o /etc/apt/keyrings/robotops.gpg
 
-This adds the RobotOps apt repository and imports the GPG signing key.
+# Add the repository
+echo "deb [signed-by=/etc/apt/keyrings/robotops.gpg] https://apt.robotops.com noble main" | sudo tee /etc/apt/sources.list.d/robotops.list
+```
 
 ### 2. Install the package
 
@@ -78,8 +80,11 @@ source install/setup.bash
 For development/testing builds (not recommended for production):
 
 ```bash
-# Add the development repository instead
-curl -1sLf 'https://dl.cloudsmith.io/public/robotops/robotops-development/setup.deb.sh' | sudo bash
+# Add the GPG key
+curl -fsSL https://apt.development.robotops.com/robotops-public-key.asc | sudo gpg --dearmor -o /etc/apt/keyrings/robotops-dev.gpg
+
+# Add the development repository
+echo "deb [signed-by=/etc/apt/keyrings/robotops-dev.gpg] https://apt.development.robotops.com noble main" | sudo tee /etc/apt/sources.list.d/robotops-dev.list
 
 sudo apt update
 sudo apt install ros-jazzy-robotops-msgs
@@ -89,13 +94,24 @@ sudo apt install ros-jazzy-robotops-msgs
 
 The `robotops-msgs` Rust crate provides native Rust bindings for all message types.
 
-### 1. Configure the Cloudsmith Cargo registry
+### 1. Configure AWS CodeArtifact
 
-Add to `.cargo/config.toml` in your project or `~/.cargo/config.toml` globally:
+Authenticate with AWS CodeArtifact:
 
-```toml
-[registries.robotops-robotops-msgs-rust]
-index = "sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust/"
+```bash
+# Production
+aws codeartifact login --tool cargo \
+  --domain robotops \
+  --domain-owner 189676910689 \
+  --repository robotops-cargo \
+  --region us-east-1
+
+# Or for development
+aws codeartifact login --tool cargo \
+  --domain robotops \
+  --domain-owner 717949299175 \
+  --repository robotops-cargo \
+  --region us-east-1
 ```
 
 ### 2. Add the dependency
@@ -104,7 +120,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-robotops-msgs = { version = "0.4", registry = "robotops-robotops-msgs-rust" }
+robotops-msgs = { version = "0.5", registry = "codeartifact" }
 ```
 
 ### 3. Use in your code
@@ -117,18 +133,20 @@ let event = TraceEvent::default();
 
 ### Development Builds (Rust)
 
-For development/testing builds:
+For development/testing builds, use the development AWS account:
 
-```toml
-# .cargo/config.toml
-[registries.robotops-dev]
-index = "sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust-dev/"
+```bash
+aws codeartifact login --tool cargo \
+  --domain robotops \
+  --domain-owner 717949299175 \
+  --repository robotops-cargo \
+  --region us-east-1
 ```
 
 ```toml
 # Cargo.toml
 [dependencies]
-robotops-msgs = { version = "0.4", registry = "robotops-dev" }
+robotops-msgs = { version = "0.5", registry = "codeartifact" }
 ```
 
 ## Uninstallation
@@ -140,7 +158,7 @@ sudo apt remove ros-jazzy-robotops-msgs
 To also remove the apt repository:
 
 ```bash
-sudo rm /etc/apt/sources.list.d/robotops-robotops.list
-sudo rm /usr/share/keyrings/robotops-robotops-archive-keyring.gpg
+sudo rm /etc/apt/sources.list.d/robotops.list
+sudo rm /etc/apt/keyrings/robotops.gpg
 sudo apt update
 ```

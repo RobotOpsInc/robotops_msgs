@@ -140,18 +140,29 @@ Auto-generated from ROS2 .msg definitions using ros2_rust.
 
 ## Installation
 
-1. Configure the Cloudsmith Cargo registry in \`.cargo/config.toml\`:
+1. Authenticate with AWS CodeArtifact:
 
-\`\`\`toml
-[registries.robotops]
-index = "sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust/"
+\`\`\`bash
+# Production
+aws codeartifact login --tool cargo \\
+  --domain robotops \\
+  --domain-owner 189676910689 \\
+  --repository robotops-cargo \\
+  --region us-east-1
+
+# Or for development
+aws codeartifact login --tool cargo \\
+  --domain robotops \\
+  --domain-owner 717949299175 \\
+  --repository robotops-cargo \\
+  --region us-east-1
 \`\`\`
 
 2. Add to \`Cargo.toml\`:
 
 \`\`\`toml
 [dependencies]
-robotops-msgs = { version = "$VERSION", registry = "robotops" }
+robotops-msgs = { version = "$VERSION", registry = "codeartifact" }
 \`\`\`
 
 ## Message Types

@@ -8,6 +8,15 @@ on:
         type: boolean
         default: false
 
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: '717949299175'
+  DEPLOY_ROLE: arn:aws:iam::717949299175:role/github-actions-deploy-development
+  CLOUDFRONT_DISTRIBUTION_ID: EE9YB1UW7HRUQ
+  APT_BUCKET: robotops-apt-pub-development
+  CODEARTIFACT_DOMAIN: robotops
+  CODEARTIFACT_REPO: robotops-cargo
+
 jobs:
   release-dev:
     runs-on: ubuntu-latest
@@ -78,12 +87,12 @@ jobs:
           echo "### Release Notes" >> $GITHUB_STEP_SUMMARY
           cat release_notes.md >> $GITHUB_STEP_SUMMARY
 
-  publish-deb-packages:
+  build-deb-packages:
     runs-on: ${{ matrix.runner }}
     needs: release-dev
     if: ${{ !inputs.dry_run }}
     permissions:
-      contents: write
+      contents: read
     strategy:
       matrix:
         include:
@@ -132,18 +141,12 @@ jobs:
           echo "file=$DEB_FILE" >> $GITHUB_OUTPUT
           echo "Built package: $DEB_FILE"
 
-      - name: Upload to Cloudsmith
-        uses: cloudsmith-io/action@v0.6.10
+      - name: Upload deb artifact
+        uses: actions/upload-artifact@v4
         with:
-          api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
-          command: "push"
-          format: "deb"
-          owner: "robotops"
-          repo: "robotops-development"
-          distro: "ubuntu"
-          release: "noble"
-          republish: "true"
-          file: ${{ steps.deb.outputs.file }}
+          name: deb-${{ matrix.arch }}
+          path: ${{ steps.deb.outputs.file }}
+          retention-days: 1
 
       - name: Summary
         run: |
@@ -152,10 +155,50 @@ jobs:
           echo "Version: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "Package: ${{ steps.deb.outputs.file }}" >> $GITHUB_STEP_SUMMARY
 
+  publish-debian:
+    runs-on: ubuntu-latest
+    needs: build-deb-packages
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download amd64 deb
+        uses: actions/download-artifact@v4
+        with:
+          name: deb-amd64
+          path: debs/
+
+      - name: Download arm64 deb
+        uses: actions/download-artifact@v4
+        with:
+          name: deb-arm64
+          path: debs/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Publish to S3
+        uses: ./.github/actions/publish-debian-s3
+        with:
+          deb-files: debs/*.deb
+          apt-bucket: ${{ env.APT_BUCKET }}
+          cloudfront-distribution-id: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          aws-region: ${{ env.AWS_REGION }}
+
   publish-rust-sdk:
     runs-on: ubuntu-latest
     needs: release-dev
     if: ${{ !inputs.dry_run }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -196,41 +239,70 @@ jobs:
              cd /ws/src/robotops_msgs/generated/sdks/rust && \
              cargo check && cargo test"
 
-      - name: Publish to Cloudsmith (development)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Publish to CodeArtifact
         env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
+          # Get CodeArtifact auth token
+          export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+            --domain ${{ env.CODEARTIFACT_DOMAIN }} \
+            --domain-owner ${{ env.AWS_ACCOUNT_ID }} \
+            --region ${{ env.AWS_REGION }} \
+            --query authorizationToken \
+            --output text)
+
+          # Get CodeArtifact endpoint
+          export CODEARTIFACT_ENDPOINT=$(aws codeartifact get-repository-endpoint \
+            --domain ${{ env.CODEARTIFACT_DOMAIN }} \
+            --domain-owner ${{ env.AWS_ACCOUNT_ID }} \
+            --repository ${{ env.CODEARTIFACT_REPO }} \
+            --format cargo \
+            --region ${{ env.AWS_REGION }} \
+            --query repositoryEndpoint \
+            --output text)
+
+          # Run publish inside Docker with AWS credentials
           docker run --rm \
             -v "$(pwd)/generated:/ws/src/robotops_msgs/generated" \
-            -e CLOUDSMITH_API_KEY="${CLOUDSMITH_API_KEY}" \
-            -e VERSION="${{ steps.version.outputs.version }}" \
+            -e CODEARTIFACT_AUTH_TOKEN="${CODEARTIFACT_AUTH_TOKEN}" \
+            -e CODEARTIFACT_ENDPOINT="${CODEARTIFACT_ENDPOINT}" \
+            -e VERSION="${VERSION}" \
             robotops_msgs:ci bash -c '
               source /ws/install/setup.bash
               cd /ws/src/robotops_msgs/generated/sdks/rust
               mkdir -p ~/.cargo
 
-              # Configure Cloudsmith development registry (matching robotops_config approach)
+              # Configure CodeArtifact registry
               cat > ~/.cargo/config.toml <<EOF
-          [registries.cloudsmith-dev]
-          index = "sparse+https://cargo.cloudsmith.io/robotops/robotops-msgs-rust-dev/"
-          token = "Token ${CLOUDSMITH_API_KEY}"
-          credential-provider = "cargo:token"
+          [registries.codeartifact]
+          index = "sparse+${CODEARTIFACT_ENDPOINT}"
+
+          [registry]
+          global-credential-providers = ["cargo:token"]
           EOF
+
+              export CARGO_REGISTRIES_CODEARTIFACT_TOKEN="${CODEARTIFACT_AUTH_TOKEN}"
 
               # Publish builtin-interfaces first (dependency)
               cd builtin-interfaces
-              cargo publish --registry cloudsmith-dev --allow-dirty || echo "builtin-interfaces may already exist"
+              cargo publish --registry codeartifact --allow-dirty || echo "builtin-interfaces may already exist"
               cd ..
 
               # Update robotops-msgs to use registry dependency instead of path
-              sed -i "s|builtin_interfaces = { path = \"../builtin-interfaces\", package = \"builtin-interfaces\" }|builtin_interfaces = { version = \"${VERSION}\", registry = \"cloudsmith-dev\", package = \"builtin-interfaces\" }|" robotops-msgs/Cargo.toml
+              sed -i "s|builtin_interfaces = { path = \"../builtin-interfaces\", package = \"builtin-interfaces\" }|builtin_interfaces = { version = \"${VERSION}\", registry = \"codeartifact\", package = \"builtin-interfaces\" }|" robotops-msgs/Cargo.toml
 
               # Wait for index to update
               sleep 10
 
               # Publish robotops-msgs
               cd robotops-msgs
-              cargo publish --registry cloudsmith-dev --allow-dirty
+              cargo publish --registry codeartifact --allow-dirty
             '
 
       - name: Summary
@@ -239,11 +311,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Version: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "Crates: builtin-interfaces, robotops-msgs" >> $GITHUB_STEP_SUMMARY
-          echo "Published to Cloudsmith development Cargo registry" >> $GITHUB_STEP_SUMMARY
+          echo "Published to AWS CodeArtifact" >> $GITHUB_STEP_SUMMARY
 
   update-release-notes:
     runs-on: ubuntu-latest
-    needs: [publish-deb-packages, publish-rust-sdk]
+    needs: [publish-debian, publish-rust-sdk]
     permissions:
       contents: write
     steps:
@@ -256,10 +328,10 @@ jobs:
           DEV_TAG="v${VERSION}-development-$(git rev-parse --short HEAD)"
           echo "tag=$DEV_TAG" >> $GITHUB_OUTPUT
 
-      - name: Add Cloudsmith link to release notes
+      - name: Add package link to release notes
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           CURRENT_BODY=$(gh release view "${{ steps.version.outputs.tag }}" --json body -q .body)
-          LINK=$'\n\n[View packages on Cloudsmith](https://cloudsmith.io/~robotops/repos/robotops-development/packages/)'
+          LINK=$'\n\n[View packages on apt.development.robotops.com](https://apt.development.robotops.com)'
           gh release edit "${{ steps.version.outputs.tag }}" --notes "${CURRENT_BODY}${LINK}"
