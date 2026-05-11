@@ -51,6 +51,10 @@ bloom-generate rosdebian --os-name ubuntu --os-version noble --ros-distro jazzy
 
 **Versioning:** Use `just bump-version patch|minor|major` to increment version in `package.xml` and create a `CHANGELOG.rst` entry. Both are required for PRs to pass version-check. Releases are triggered manually via GitHub Actions UI.
 
+## Git Workflow
+
+For Linear issues, do all work in a worktree created from the Linear issue branch name. Set-head the worktree to `development` before branching, and open PRs against `development`.
+
 ## Documentation
 
 The `docs/` directory contains end-user documentation. **When making changes that affect installation, usage, or workflows, check and update the relevant docs:**
