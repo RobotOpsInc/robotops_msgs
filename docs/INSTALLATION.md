@@ -90,7 +90,7 @@ sudo apt update
 sudo apt install ros-jazzy-robotops-msgs
 ```
 
-## Rust SDK (for robot_agent and other Rust consumers)
+## Rust SDK (for TraceHouse and other Rust consumers)
 
 The `robotops-msgs` Rust crate provides native Rust bindings for all message types.
 
