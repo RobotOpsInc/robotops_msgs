@@ -1,8 +1,30 @@
-## Robot Ops project context
+## Canopy — Internal Robot Ops guidance
 
-Before making changes in this repo, cross-check the codebase and related docs so
-updates are safe and consistent with existing Robot Ops behavior.
+The org-wide knowledge graph is at `RobotOpsInc/canopy` (`vault/`). This repo is
+documented at `vault/projects/robotops-msgs/`.
 
+This guidance is for internal Robot Ops developers only. Use it to keep changes
+safe and consistent with the existing codebase and related docs.
+
+The vault slug is the repo name lowercased with underscores replaced by hyphens
+(e.g. `robotops_msgs` → `robotops-msgs`).
+
+### Read Canopy before…
+
+* Making a change that affects shared message definitions or downstream consumers
+* Investigating a regression that might already be documented in `vault/incidents/`
+* Making an architectural or cross-repo decision — check `vault/decisions/` and related project notes
+
+### Leave a raw note when…
+
+When something notable happens — a decision is made, a public interface changes, a
+non-obvious bug is fixed, or a constraint is discovered — create a file at:
+
+`vault/_raw/robotops-msgs-YYYY-MM-DD-<short-slug>.md`
+
+in the `RobotOpsInc/canopy` repo and open a PR against `main`. Keep it factual:
+what changed, why, and any cross-repo implications. Do not write vault pages
+ directly.
 
 # CLAUDE.md
 
