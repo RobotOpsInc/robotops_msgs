@@ -1,32 +1,30 @@
-## Canopy — Knowledge Graph
+## Canopy — Internal Robot Ops guidance
 
 The org-wide knowledge graph is at `RobotOpsInc/canopy` (`vault/`). This repo is
 documented at `vault/projects/robotops-msgs/`.
 
+This guidance is for internal Robot Ops developers only. Use it to keep changes
+safe and consistent with the existing codebase and related docs.
+
 The vault slug is the repo name lowercased with underscores replaced by hyphens
-(e.g. `robot_agent` → `robot-agent`, `web_app` → `web-app`).
+(e.g. `robotops_msgs` → `robotops-msgs`).
 
 ### Read Canopy before…
 
-* Making an architectural decision — check `vault/decisions/` and
-  `vault/projects/robotops-msgs/decisions/`
-* Touching a shared interface (protos, RMW API, config schema) — read the relevant
-  project pages to understand what downstream repos depend on
-* Investigating a regression that might be a known incident — check `vault/incidents/`
+* Making a change that affects shared message definitions or downstream consumers
+* Investigating a regression that might already be documented in `vault/incidents/`
+* Making an architectural or cross-repo decision — check `vault/decisions/` and related project notes
 
 ### Leave a raw note when…
 
 When something notable happens — a decision is made, a public interface changes, a
-non-obvious bug is fixed, a constraint is discovered — create a file at:
+non-obvious bug is fixed, or a constraint is discovered — create a file at:
 
 `vault/_raw/robotops-msgs-YYYY-MM-DD-<short-slug>.md`
 
-in the `RobotOpsInc/canopy` repo and open a PR against `main`. Keep it factual: what
-changed, why, any cross-repo implications. Especially for anything architectural or a
-new feature, describe in detail. You can use illustrations, links, text — the ingestion
-pipeline is very flexible. The canopy ingest workflow handles everything from there.
-Do not write vault pages directly.
-
+in the `RobotOpsInc/canopy` repo and open a PR against `main`. Keep it factual:
+what changed, why, and any cross-repo implications. Do not write vault pages
+ directly.
 
 # CLAUDE.md
 
