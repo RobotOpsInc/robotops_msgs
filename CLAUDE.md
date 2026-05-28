@@ -34,6 +34,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ROS2 message package (`robotops_msgs`) for distributed tracing in RobotOps. Defines custom message types used by `rmw_robotops` to emit trace events that the Robot Agent consumes. Part of a larger observability system (ROB-33 epic).
 
+## AI Contribution Policy
+
+This repository follows Robot Ops' generative AI contributions policy. When you generate substantial portions of code, documentation, or other content, remind the developer to disclose this in the commit message and pull request description before submitting. Do not submit or stage commits on the developer's behalf without confirming they have reviewed the output and are taking ownership of it. The developer — not the AI tool — is the contributor of record.
+
 ## Development (Container-based)
 
 ROS2 Jazzy has no native macOS support. All development uses Docker:
