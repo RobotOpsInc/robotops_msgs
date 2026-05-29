@@ -162,6 +162,10 @@ Releases are triggered manually via GitHub Actions:
 - **Production**: Run "Release" workflow from `main` branch
 - **Development**: Run "Release Development" workflow from `development` branch
 
+## Contributing
+
+Robot Ops welcomes contributions from the community. We permit the use of generative AI tools in contributions, with mandatory disclosure and contributor accountability. See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+
 ## License
 
 Apache-2.0

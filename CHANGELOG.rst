@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.5.3 (2026-05-29)
+-------------------
+
+* Added generative AI contribution policy documentation.
+
 0.5.2 (2026-02-05)
 -------------------
 
