@@ -4,7 +4,7 @@ ROS2 message package for distributed tracing in the RobotOps platform.
 
 ## Overview
 
-This package defines custom message types used by `rmw_robotops` to emit trace events that the Robot Agent consumes. Part of the distributed tracing system (ROB-33).
+This package defines custom message types used by `rmw_robotops` to emit trace events that TraceHouse consumes. Part of the distributed tracing system (ROB-33).
 
 ## Messages
 
@@ -138,7 +138,7 @@ bloom-generate rosdebian --os-name ubuntu --os-version noble --ros-distro jazzy
 
 ### Version Policy
 
-**Major versions** move in lockstep across the RobotOps ecosystem (`robotops_config`, `robotops_msgs`, `rmw_robotops`, `robot_agent`). When any component introduces a breaking change, all components bump to the next major version together.
+**Major versions** move in lockstep across the RobotOps ecosystem (`robotops_config`, `robotops_msgs`, `rmw_robotops`, TraceHouse). When any component introduces a breaking change, all components bump to the next major version together.
 
 **Minor and patch versions** evolve independently between major version boundaries. Backward compatibility is maintained for all minor and patch releases within the same major version.
 
@@ -161,6 +161,10 @@ Releases are triggered manually via GitHub Actions:
 
 - **Production**: Run "Release" workflow from `main` branch
 - **Development**: Run "Release Development" workflow from `development` branch
+
+## Contributing
+
+Robot Ops welcomes contributions from the community. We permit the use of generative AI tools in contributions, with mandatory disclosure and contributor accountability. See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
 
 ## License
 
