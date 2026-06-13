@@ -97,28 +97,11 @@ runs:
           echo "No existing repository found in S3"
         fi
 
-    # Channel routing (ROB-325): robotops_msgs now ships per-ROS-distro debs
-    # (ros-jazzy-robotops-msgs vs ros-humble-robotops-msgs). Each must land in
-    # the apt channel matching its ROS distro — jazzy → noble, humble → jammy —
-    # not in every channel. We key off the ros-<distro>- prefix in the .deb
-    # filename and use one aptly repo per distribution so the published index
-    # for each channel only contains the packages built for that channel.
-    #
-    # focal is retained as a published channel for backwards compatibility but
-    # receives no packages from this repo (no ROS distro maps to it here).
     - name: Create or Update Repository
       shell: bash
       run: |
+        REPO_NAME="robotops"
         DISTRIBUTIONS="noble jammy focal"
-
-        # Map a ROS distro (parsed from the deb filename) to its apt channel.
-        ros_distro_to_channel() {
-          case "$1" in
-            jazzy) echo noble ;;
-            humble) echo jammy ;;
-            *) echo "" ;;
-          esac
-        }
 
         # Try to restore from S3 snapshot if it exists
         if aws s3 ls s3://${{ inputs.apt-bucket }}/.aptly/ 2>/dev/null; then
@@ -127,53 +110,21 @@ runs:
           aws s3 sync s3://${{ inputs.apt-bucket }}/.aptly/ ~/.aptly/ || echo "No snapshot to restore"
         fi
 
-        # Ensure one aptly repo per distribution channel exists. On the first
-        # run after the single-repo → per-channel migration, seed each new repo
-        # from the legacy `robotops` repo (if present) so previously published
-        # packages for that channel are preserved. Legacy debs follow the
-        # ros-<distro>-* naming, so we copy only those matching this channel.
-        LEGACY_REPO="robotops"
-        HAVE_LEGACY=0
-        if aptly repo list -raw | grep -q "^${LEGACY_REPO}$"; then
-          HAVE_LEGACY=1
+        # Check if repo exists, create if not
+        if ! aptly repo list -raw | grep -q "^${REPO_NAME}$"; then
+          echo "Creating new Aptly repository: ${REPO_NAME}"
+          aptly repo create -distribution=noble -component=main ${REPO_NAME}
+        else
+          echo "Repository ${REPO_NAME} already exists"
         fi
-        for dist in $DISTRIBUTIONS; do
-          REPO_NAME="robotops-${dist}"
-          if ! aptly repo list -raw | grep -q "^${REPO_NAME}$"; then
-            echo "Creating new Aptly repository: ${REPO_NAME}"
-            aptly repo create -distribution=${dist} -component=main ${REPO_NAME}
-            if [ "$HAVE_LEGACY" = "1" ]; then
-              # Pick the ROS distro that maps to this channel and import its debs.
-              case "$dist" in
-                noble) seed_distro=jazzy ;;
-                jammy) seed_distro=humble ;;
-                *) seed_distro="" ;;
-              esac
-              if [ -n "$seed_distro" ]; then
-                echo "Seeding ${REPO_NAME} from legacy ${LEGACY_REPO} (ros-${seed_distro}-*)..."
-                aptly repo copy "${LEGACY_REPO}" "${REPO_NAME}" "Name (~ ros-${seed_distro}-.*)" || \
-                  echo "No legacy ros-${seed_distro}-* packages to seed"
-              fi
-            fi
-          else
-            echo "Repository ${REPO_NAME} already exists"
-          fi
-        done
 
-        # Route each .deb to the repo for the channel matching its ROS distro.
+        # Add all .deb files
+        echo "Adding packages to repository..."
         for deb in ${{ inputs.deb-files }}; do
-          if [ ! -f "$deb" ]; then
-            continue
+          if [ -f "$deb" ]; then
+            echo "Adding: $deb"
+            aptly repo add ${REPO_NAME} "$deb"
           fi
-          base=$(basename "$deb")
-          ros_distro=$(echo "$base" | sed -n 's/^ros-\([a-z]*\)-.*/\1/p')
-          channel=$(ros_distro_to_channel "$ros_distro")
-          if [ -z "$channel" ]; then
-            echo "::error::Cannot determine apt channel for package '$base' (parsed ROS distro: '${ros_distro:-<none>}'). Add a mapping in ros_distro_to_channel."
-            exit 1
-          fi
-          echo "Adding $base -> repo robotops-${channel} (ROS ${ros_distro} -> ${channel})"
-          aptly repo add "robotops-${channel}" "$deb"
         done
 
     - name: Publish to S3
@@ -181,26 +132,20 @@ runs:
       env:
         GPG_PASSPHRASE: ${{ inputs.gpg-passphrase }}
       run: |
+        REPO_NAME="robotops"
         DISTRIBUTIONS="noble jammy focal"
 
-        # Publish each per-distribution repo to its matching channel.
-        #
-        # Migration note (ROB-325): earlier this action published a single
-        # `robotops` aptly repo to every channel. A `publish update` keeps a
-        # publication bound to whatever repo it was first created from, so to
-        # re-point each channel at its new per-distribution repo we drop any
-        # existing publication for the channel and re-create it. `publish drop`
-        # only removes the published index for that distribution (the repos and
-        # package pool are untouched), so this is safe and idempotent.
+        # For each distribution
         for dist in $DISTRIBUTIONS; do
-          REPO_NAME="robotops-${dist}"
+          # Check if this distribution is already published
           # -raw output format: "s3:robotops:. noble" (endpoint dot-prefix space distribution)
           if aptly publish list -raw | grep -q "^s3:robotops:\. ${dist}$"; then
-            echo "Dropping existing publication for ${dist} to re-point at ${REPO_NAME}..."
-            aptly publish drop ${dist} s3:robotops:
+            echo "Updating existing publication for ${dist}..."
+            aptly publish update -batch -passphrase="${GPG_PASSPHRASE}" -gpg-key="${GPG_KEY_ID}" ${dist} s3:robotops:
+          else
+            echo "Creating new publication for ${dist}..."
+            aptly publish repo -batch -passphrase="${GPG_PASSPHRASE}" -gpg-key="${GPG_KEY_ID}" -distribution=${dist} -component=main ${REPO_NAME} s3:robotops:
           fi
-          echo "Publishing ${REPO_NAME} to channel ${dist}..."
-          aptly publish repo -batch -passphrase="${GPG_PASSPHRASE}" -gpg-key="${GPG_KEY_ID}" -distribution=${dist} -component=main ${REPO_NAME} s3:robotops:
         done
 
         # Backup Aptly database to S3 for future runs

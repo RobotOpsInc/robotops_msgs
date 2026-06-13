@@ -177,10 +177,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Download every (ros_distro, arch) deb artifact built above. The
-      # publish action routes each .deb to the apt channel matching the ROS
-      # distro encoded in its filename (ros-jazzy-* → noble, ros-humble-* →
-      # jammy), so they are flattened into one directory here.
+      # Download every (ros_distro, arch) deb artifact built above, flattened
+      # into one directory. The publish action adds them all to the shared
+      # `robotops` aptly repo, which is published to every distribution
+      # (noble/jammy/focal). The ros-jazzy-* and ros-humble-* debs are distinct
+      # packages, so a Jammy client installs ros-humble-robotops-msgs while the
+      # ros-jazzy-* deb is simply present-but-uninstallable there (harmless).
       - name: Download deb artifacts
         uses: actions/download-artifact@v4
         with:
