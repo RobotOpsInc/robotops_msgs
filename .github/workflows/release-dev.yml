@@ -95,11 +95,24 @@ jobs:
       contents: read
     strategy:
       matrix:
+        # Each entry builds one (ROS distro, arch) .deb. The ros_distro selects
+        # the ros:<distro> base image (Dockerfile ROS_DISTRO build-arg) +
+        # /opt/ros/<distro>; os_version is the Ubuntu codename bloom targets and
+        # the apt channel the package is published to (jazzy → Noble, humble →
+        # Jammy). Jazzy ships amd64+arm64; Humble is arm64-only (Jetson target).
         include:
           - arch: amd64
             runner: ubuntu-24.04
+            ros_distro: jazzy
+            os_version: noble
           - arch: arm64
             runner: ubuntu-24.04-arm
+            ros_distro: jazzy
+            os_version: noble
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            ros_distro: humble
+            os_version: jammy
     steps:
       - uses: actions/checkout@v4
 
@@ -119,17 +132,19 @@ jobs:
           file: ./Dockerfile
           push: false
           load: true
-          tags: robotops_msgs:ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          build-args: |
+            ROS_DISTRO=${{ matrix.ros_distro }}
+          tags: robotops_msgs:ci-${{ matrix.ros_distro }}-${{ matrix.arch }}
+          cache-from: type=gha,scope=${{ matrix.ros_distro }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.ros_distro }}-${{ matrix.arch }}
 
       - name: Build Debian package
         run: |
           docker run --rm \
             -v "$(pwd)":/output \
-            robotops_msgs:ci bash -c "
+            robotops_msgs:ci-${{ matrix.ros_distro }}-${{ matrix.arch }} bash -c "
               cd /ws/src/robotops_msgs && \
-              bloom-generate rosdebian --os-name ubuntu --os-version noble --ros-distro jazzy && \
+              bloom-generate rosdebian --os-name ubuntu --os-version ${{ matrix.os_version }} --ros-distro ${{ matrix.ros_distro }} && \
               dpkg-buildpackage -us -uc -b && \
               cp /ws/src/*.deb /output/
             "
@@ -144,13 +159,13 @@ jobs:
       - name: Upload deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: deb-${{ matrix.arch }}
+          name: deb-${{ matrix.ros_distro }}-${{ matrix.arch }}
           path: ${{ steps.deb.outputs.file }}
           retention-days: 1
 
       - name: Summary
         run: |
-          echo "## Debian Package (Development - ${{ matrix.arch }})" >> $GITHUB_STEP_SUMMARY
+          echo "## Debian Package (Development - ${{ matrix.ros_distro }} / ${{ matrix.os_version }} / ${{ matrix.arch }})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Version: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "Package: ${{ steps.deb.outputs.file }}" >> $GITHUB_STEP_SUMMARY
@@ -164,17 +179,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download amd64 deb
+      # Download every (ros_distro, arch) deb artifact built above, flattened
+      # into one directory. The publish action adds them all to the shared
+      # `robotops` aptly repo, published to every distribution (noble/jammy/
+      # focal); the ros-jazzy-* and ros-humble-* debs are distinct packages.
+      - name: Download deb artifacts
         uses: actions/download-artifact@v4
         with:
-          name: deb-amd64
+          pattern: deb-*
           path: debs/
-
-      - name: Download arm64 deb
-        uses: actions/download-artifact@v4
-        with:
-          name: deb-arm64
-          path: debs/
+          merge-multiple: true
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
