@@ -69,3 +69,65 @@ jobs:
             echo "::error::tools/generate-sdk.sh not found"
             exit 1
           fi
+
+  # Guard against shipping an interface change (msg/srv/action) under an
+  # already-released version. A new field once landed in msg/TraceEvent.msg
+  # without bumping <version> in package.xml, so it shipped under the already-
+  # released 0.5.4 and collided downstream. This job requires a real version
+  # bump whenever an interface file changes.
+  version-bump-required:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need history to diff against the base branch
+
+      - name: Require version bump when interfaces change
+        run: |
+          # Interface files whose change requires a version bump
+          CHANGED_FILES=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          echo ""
+
+          # Detect whether any interface file changed
+          CHANGED_INTERFACE=""
+          for file in $CHANGED_FILES; do
+            case "$file" in
+              msg/*.msg|srv/*.srv|action/*.action)
+                CHANGED_INTERFACE="$file"
+                echo "Interface file changed: $file"
+                ;;
+            esac
+          done
+
+          if [ -z "$CHANGED_INTERFACE" ]; then
+            echo "No interface (msg/srv/action) files changed - version bump not required"
+            exit 0
+          fi
+
+          echo ""
+          echo "Interface files changed - verifying package.xml <version> was bumped..."
+
+          # Extract <version> from base branch and head
+          OLD_VERSION=$(git show "origin/${{ github.base_ref }}:package.xml" \
+            | grep -oP '(?<=<version>)[^<]+' || echo "")
+          NEW_VERSION=$(grep -oP '(?<=<version>)[^<]+' package.xml || echo "")
+
+          echo "Base version: ${OLD_VERSION:-<none>}"
+          echo "Head version: ${NEW_VERSION:-<none>}"
+
+          if [ -z "$NEW_VERSION" ]; then
+            echo "::error::Could not read <version> from package.xml"
+            exit 1
+          fi
+
+          if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
+            echo "::error::${CHANGED_INTERFACE} changed but package.xml version was not bumped (still ${NEW_VERSION}) — bump <version> in package.xml and add a CHANGELOG.rst entry"
+            exit 1
+          fi
+
+          echo "Version bumped: ${OLD_VERSION:-<none>} -> ${NEW_VERSION}"
