@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.6.0 (2026-06-23)
+-------------------
+
+* Added ``direction`` field (UNSPECIFIED/PRODUCER/CONSUMER) to TraceEvent so robot_agent can distinguish the producer vs consumer side of service/action RPC events and stitch them into one trace (ROB-406).
+
 0.5.4 (2026-06-16)
 -------------------
 
