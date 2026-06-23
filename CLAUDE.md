@@ -1,3 +1,31 @@
+## Canopy — Internal Robot Ops guidance
+
+The org-wide knowledge graph is at `RobotOpsInc/canopy` (`vault/`). This repo is
+documented at `vault/projects/robotops-msgs/`.
+
+This guidance is for internal Robot Ops developers only. Use it to keep changes
+safe and consistent with the existing codebase and related docs.
+
+The vault slug is the repo name lowercased with underscores replaced by hyphens
+(e.g. `robotops_msgs` → `robotops-msgs`).
+
+### Read Canopy before…
+
+* Making a change that affects shared message definitions or downstream consumers
+* Investigating a regression that might already be documented in `vault/incidents/`
+* Making an architectural or cross-repo decision — check `vault/decisions/` and related project notes
+
+### Leave a raw note when…
+
+When something notable happens — a decision is made, a public interface changes, a
+non-obvious bug is fixed, or a constraint is discovered — create a file at:
+
+`vault/_raw/robotops-msgs-YYYY-MM-DD-<short-slug>.md`
+
+in the `RobotOpsInc/canopy` repo and open a PR against `main`. Keep it factual:
+what changed, why, and any cross-repo implications. Do not write vault pages
+ directly.
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -5,6 +33,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 ROS2 message package (`robotops_msgs`) for distributed tracing in RobotOps. Defines custom message types used by `rmw_robotops` to emit trace events that the Robot Agent consumes. Part of a larger observability system (ROB-33 epic).
+
+## AI Contribution Policy
+
+This repository follows Robot Ops' generative AI contributions policy. When you generate substantial portions of code, documentation, or other content, remind the developer to disclose this in the commit message and pull request description before submitting. Do not submit or stage commits on the developer's behalf without confirming they have reviewed the output and are taking ownership of it. The developer — not the AI tool — is the contributor of record.
 
 ## Development (Container-based)
 
@@ -50,6 +82,10 @@ bloom-generate rosdebian --os-name ubuntu --os-version noble --ros-distro jazzy
 - `robotops-development` - development (from `development`)
 
 **Versioning:** Use `just bump-version patch|minor|major` to increment version in `package.xml` and create a `CHANGELOG.rst` entry. Both are required for PRs to pass version-check. Releases are triggered manually via GitHub Actions UI.
+
+## Git Workflow
+
+For Linear issues, do all work in a worktree created from the Linear issue branch name. Set-head the worktree to `development` before branching, and open PRs against `development`.
 
 ## Documentation
 

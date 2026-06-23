@@ -29,10 +29,17 @@ RUN apt-get update && apt-get install -y \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --component clippy
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Install colcon cargo plugins for ros2_rust
-RUN pip3 install --break-system-packages \
-    git+https://github.com/colcon/colcon-cargo.git \
-    git+https://github.com/colcon/colcon-ros-cargo.git
+# Install colcon cargo plugins for ros2_rust.
+# --break-system-packages is required on PEP-668 "externally-managed" Pythons
+# (Jazzy/Noble, pip >= 23.0.1) but is unknown to the older pip on Humble/Jammy
+# (Ubuntu 22.04, pip 22.x), so probe for it and only pass it when supported.
+RUN PIP_FLAGS=""; \
+    if pip3 install --help 2>/dev/null | grep -q -- '--break-system-packages'; then \
+        PIP_FLAGS="--break-system-packages"; \
+    fi; \
+    pip3 install $PIP_FLAGS \
+        git+https://github.com/colcon/colcon-cargo.git \
+        git+https://github.com/colcon/colcon-ros-cargo.git
 
 # Set up workspace
 WORKDIR /ws

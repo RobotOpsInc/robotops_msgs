@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.5.4 (2026-06-16)
+-------------------
+
+* Published Humble/amd64 Debian package (added amd64 build matrix row for the humble/jammy ABI).
+
+0.5.3 (2026-05-29)
+-------------------
+
+* Added generative AI contribution policy documentation.
+
 0.5.2 (2026-02-05)
 -------------------
 

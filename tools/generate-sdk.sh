@@ -65,6 +65,19 @@ else
 fi
 
 # ============================================
+# Suppress clippy lints in generated Rust files
+# (rosidl_generator_rs emits empty lines after outer attributes and doc comments
+# which trigger clippy::empty_line_after_outer_attr / empty_line_after_doc_comments)
+# ============================================
+echo "Adding clippy allow attributes to generated Rust files"
+find "$OUTPUT_DIR" -name "*.rs" | while read -r f; do
+    sed -i '1s/^\/\/ Copyright.*//' "$f" 2>/dev/null || true
+    printf '%s\n%s' \
+        '#![allow(clippy::empty_line_after_doc_comments, clippy::empty_line_after_outer_attr)]' \
+        "$(cat "$f")" > "$f"
+done
+
+# ============================================
 # Generate workspace Cargo.toml
 # ============================================
 cat > "$OUTPUT_DIR/Cargo.toml" << 'EOF'
