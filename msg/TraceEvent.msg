@@ -52,3 +52,21 @@ uint8 correlation_method
 uint8 CORRELATION_FASTDDS_SEQUENCE = 1    # Deterministic (related_sample_identity)
 uint8 CORRELATION_FALLBACK_HASH = 2       # Probabilistic (GID + timestamp + hash)
 uint8 CORRELATION_FALLBACK_TIMESTAMP = 3  # Probabilistic (GID + timestamp only)
+
+# Producer-vs-consumer direction for request/response-style events (ROB-406).
+#
+# For pub/sub the event_type already encodes direction (PUBLISH_* = producer,
+# TAKE_* = consumer). For services and actions, however, the SAME event_type is
+# emitted on both ends of an RPC: a client sending a request and a service
+# server taking that request both emit EVENT_SERVICE_REQUEST. The
+# CorrelationEngine in robot_agent needs to know which side SEEDS the
+# correlation window (the producer / client-send) and which side CORRELATES
+# against it (the consumer / server-take). This field carries that distinction.
+#
+# DIRECTION_UNSPECIFIED (0) is the default and preserves the historical meaning
+# for pub/sub events, where direction is already implicit in event_type. Old
+# producers that never set this field deserialize as UNSPECIFIED.
+uint8 direction
+uint8 DIRECTION_UNSPECIFIED = 0   # Direction implicit in event_type (pub/sub) or unknown
+uint8 DIRECTION_PRODUCER = 1      # This end SEEDS correlation (client send_request / send_response)
+uint8 DIRECTION_CONSUMER = 2      # This end CORRELATES (service take_request / client take_response)
